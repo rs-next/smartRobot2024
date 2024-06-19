@@ -183,4 +183,75 @@ void checkLineTraisor() { // 라인트레이서 인식 메소드
                             pillars[0].pillar_y = nowY;
                             break;
                         case GREEN:
-                            pillars[1
+                            pillars[1].pillar_x = nowX;
+                            pillars[1].pillar_y = nowY;
+                            break;
+                        case BLUE:
+                            pillars[2].pillar_x = nowX;
+                            pillars[2].pillar_y = nowY;
+                            break;
+                        default:
+                            break;
+                    }
+
+                    if (objectColorCount < ARRAY_SIZE) {
+                        objectArray[objectColorCount++] = ObjectColor;
+                    } else {
+                        Serial.println("Color array limit exceeded.");
+                        Serial.println("컬러 배열 한도초과");
+                    }
+                    delay(3000);
+                    if (digitalRead(IRL) == LOW && digitalRead(IRR) == LOW) {
+                        break;
+                    }
+                    goingLeft();
+                    delay(500);
+                }
+            }
+        }
+        goingLeft();
+        delay(100);
+    }
+
+    // 끝라인 도착시 회전
+    if (digitalRead(IRL) == LOW && digitalRead(IRR) == LOW &&
+        digitalRead(BIRL) == HIGH && digitalRead(BIRR) == HIGH) {
+        if (isArrayEmpty() && robot_x == 1) {    
+            goingLeft();
+            delay(2000);
+            forward();
+            delay(2000);
+            motorStop();    
+        } else {
+            turnLeft();
+            delay(1000);
+            if (robot_x == 1) {
+                robot_y -= 1;
+                robot_x = 0;
+                Serial.print("현재 로봇좌표 : X : ");
+                Serial.println(robot_x);
+                Serial.print("현재 로봇좌표 : Y : ");
+                Serial.println(robot_y);
+            } else if (robot_x == 0) {
+                robot_y += 1;
+                robot_x = 1;
+                if (robot_y == 5) {
+                    robot_y -= 1;
+                }
+                Serial.print("현재 로봇좌표 : X : ");
+                Serial.println(robot_x);
+                Serial.print("현재 로봇좌표 : Y : ");
+                Serial.println(robot_y);
+            }
+            checkLineTraisor(); // 이동 위치 보정 후 재확인
+        }
+    }
+}
+
+void loop() {
+    backward();
+    delay(2000);
+    goingLeft();
+    delay(2000);
+    checkLineTraisor();
+}
