@@ -260,4 +260,55 @@ void loop() {
                 if(yFlag == 1) {                   
                   robot_y -= 1; 
                 }
-                Serial.print("현재 로봇좌표 : X : "
+                Serial.print("현재 로봇좌표 : X : ");
+                Serial.println(robot_x);
+                Serial.print("현재 로봇좌표 : Y : ");
+                Serial.println(robot_y);  
+                checkHuskyLens();              
+                                
+            } 
+            
+            //렌즈를 통한 색상 인식
+                                   
+        }
+  
+
+    // 끝라인 도착시 회전
+    if ((B_R == 1 && robot_y == 4 && F_R <= 300 && F_L <= 300) 
+    || (B_R == 1 && robot_y == 2 && F_R <=300 && F_L <= 300)) {
+        motorStop();
+        delay(1000);
+        
+        Serial.println("여기 왔어");
+        if (isArrayEmpty() && robot_x == 1) {    
+            goingLeft();
+            delay(2000);
+            forward();
+            delay(2000);                
+        } else {            
+            if (robot_x == 1) {
+                if(robot_y != 5) { robot_y -= 1; }                
+                Serial.println("아직 오브젝트가 남아있습니다..");
+                Serial.print("현재 로봇좌표 : X : ");
+                Serial.println(robot_x);
+                Serial.print("현재 로봇좌표 : Y : ");
+                Serial.println(robot_y);                
+
+            } else if (robot_x == 0) {              
+                robot_y += 1;               
+                Serial.println("아직 오브젝트가 남아있습니다..");
+                Serial.print("현재 로봇좌표 : X : ");
+                Serial.println(robot_x);
+                Serial.print("현재 로봇좌표 : Y : ");
+                Serial.println(robot_y);
+                checkHuskyLens();
+                robot_x = 1; 
+              }
+              turnLeft();
+              delay(7600);
+          }
+          
+      }
+}      
+
+
