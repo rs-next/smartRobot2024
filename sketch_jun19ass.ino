@@ -1,3 +1,4 @@
+
 #include <Wire.h>
 #include <HUSKYLENS.h>
 #include <PRIZM.h> // 테트릭스 프리즘 보드 초기화
@@ -15,6 +16,7 @@ PRIZM prizm; // 메인 프리즘 보드
 EXPANSION exc; // 익스펜션 컨트롤러 
 HUSKYLENS huskylens;
 
+double distance = 0;
 int firstMoving = 0;
 int objectColorCount = 0;
 int robot_x = 0;
@@ -22,6 +24,7 @@ int robot_y = 0;
 int middleValue = 512;
 int yFlag = 0;
 int xFlag = 0;
+int popObjectFlag = 0;
 struct Pillar {
     Color color;
     int pillar_x;
@@ -52,6 +55,61 @@ bool isColorInArray(Color color) {
         }
     }
     return false;
+}
+double checkDistance(){
+  double volt = map(analogRead(A1), 0, 1023, 0, 5000); 
+  distance = (27.61 / (volt - 0.1696)) * 1000;
+  Serial.println(distance);
+  return distance;
+}
+
+void getObject(){
+    //if(objectColorCount != 0){
+    // prizm.setMotorSpeed(1, -300); // 레일 올리기
+    // delay(1500);
+    // forward();
+    // prizm.setServoPosition(1,0); // 집게 풀기
+    //delay(800);
+    // prizm.setMotorSpeed(1, 300); // 레일 내리기
+    // delay(1500);
+    // prizm.setServoPosition(1,180); // 집게 조이기    
+
+  //}
+
+  //체크 거리해서 몇 센티까지 오는지 ?
+  goingLeft(); // 집기 여유공간
+  delay(50);
+  if(objectColorCount == 0){ //첫 오브젝트 집기
+    prizm.setServoPosition(1,0); // 집게 풀기
+    delay(700);
+    while(checkDistance() > 14){
+      exc.setMotorSpeeds(1, -20, 20);
+      exc.setMotorSpeeds(2, 20, -20);
+    }
+    delay(500);
+    prizm.setServoPosition(1,180); // 집게 조이기  
+    delay(700);
+
+  }else if(objectColorCount != 0){ // 두, 세번 째 오브젝트 집기
+    prizm.setMotorSpeed(1, -300); // 레일 올리기
+    delay(2000);
+    while(checkDistance() > 14){
+      exc.setMotorSpeeds(1, -20, 20); // 오브젝트로 가기
+      exc.setMotorSpeeds(2, 20, -20);
+    }
+    delay(500);
+    prizm.setServoPosition(1,0); // 집게 풀기
+    delay(700);
+    prizm.setMotorSpeed(1, 300); // 레일 내리기
+    delay(2000);
+    prizm.setServoPosition(1,180); // 집게 조이기      
+    delay(700);
+  }
+while(checkDistance() < 23){
+      exc.setMotorSpeeds(1, 20, -20);
+      exc.setMotorSpeeds(2, -20, 20);
+}
+
 }
 
 void forward() {
@@ -153,7 +211,10 @@ void checkHuskyLens(){
 
                    if (!isColorInArray(ObjectColor)) {
                       if (objectColorCount < ARRAY_SIZE) {
+                          delay(500);
+                          getObject();
                           objectArray[objectColorCount++] = ObjectColor;
+                          
                       } else {
                           Serial.println("Color array limit exceeded.");
                           Serial.println("컬러 배열 한도초과");
@@ -192,11 +253,12 @@ void setup() {
 
     // 기본 보드 및 보조 컨트롤러 초기화
     prizm.PrizmBegin();
-    prizm.setMotorInvert(2, 1);
-    exc.setMotorInvert(1, 1, 1);
-    prizm.setServoSpeed(3, 50);
-    prizm.setServoPosition(3, 60);
-    exc.setMotorInvert(2, 1, 1);
+    // prizm.setMotorInvert(2, 1);
+    // exc.setMotorInvert(1, 1, 1);
+    // prizm.setServoSpeed(1, 50);
+    // prizm.setMotorSpeed(1, 50);
+    // prizm.setServoPosition(3, 60);
+    // exc.setMotorInvert(2, 1, 1);
 
     // 정면부 라인트레이서 초기화
     pinMode(FR, INPUT);
@@ -218,104 +280,34 @@ void loop() {
         int F_R = analogRead(FR);
         int F_L = analogRead(FL);
         int B_R = !digitalRead(BR);
-        // int B_L = !digitalRead(BL);
-     
-        // Serial.print("직진 오른쪽 센서 : ");
-        // Serial.println(F_R);
-        // Serial.print("직진 왼쪽 센서 : ");
-        // Serial.println(F_L);
-        // Serial.print("옆길 오른쪽 센서 : ");
-        // Serial.println(B_R);
-        // Serial.print("옆길 왼쪽 센서 : ");
-        // Serial.println(B_L);
-        // Serial.println("------------------");
-        delay(100);
-        
-        if(F_R >= 300 && F_L >= 300){
-          goingLeft();
-        }else if(F_R <= 400 && F_L >= 600){     
-          Serial.println("헐 이거 작동함");
-            exc.setMotorSpeeds(1, 20, -20);
-            exc.setMotorSpeeds(2, -20, 20);
-          }else if(F_R >= 600 && F_L <= 400){
-            Serial.println("헐 이게 왜 작동함??");
-            exc.setMotorSpeeds(1, -20, 20);
-            exc.setMotorSpeeds(2, 20, -20);
-        }
-
-        // 양쪽 라인 및 정면 라인 센서 발견시
-        if (F_R >= 250 && F_L >= 250 && B_R == 1) 
-        {
-
-            motorStop();
-            delay(1000);            
-            Serial.println("Line detected, stopping motors.");
-            if (robot_x == 0) {  
-                if(xFlag != 1) { robot_y += 1; }
-                
-                Serial.print("현재 로봇좌표 : X : ");
-                Serial.println(robot_x);
-                Serial.print("현재 로봇좌표 : Y : ");
-                Serial.println(robot_y);
-                checkHuskyLens();                 
-            } else if (robot_x == 1) {
-                if(yFlag == 1) {                   
-                  robot_y -= 1; 
-                }
-                Serial.print("현재 로봇좌표 : X : ");
-                Serial.println(robot_x);
-                Serial.print("현재 로봇좌표 : Y : ");
-                Serial.println(robot_y);  
-                checkHuskyLens();              
-                                
-            } 
-            
-            //렌즈를 통한 색상 인식
-                                   
-        }
-  
-
-    // 끝라인 도착시 회전
-    if ((B_R == 1 && robot_y == 4 && F_R <= 250 && F_L <= 250) 
-    || (B_R == 1 && robot_y == 2 && F_R <=250 && F_L <= 250)) {
-        motorStop();
-        delay(1000);
-        
-        Serial.println("여기 왔어");
-        if (isArrayEmpty() && robot_x == 1) {    
-            goingLeft();
-            delay(2000);
-            forward();
-            delay(2000);                
-        } else {            
-            if (robot_x == 1) {
-                if( robot_y ==2 ) { 
-                  robot_x = 0; 
-                  xFlag = 1;
-                  }
-                if( robot_y != 5 ) { robot_y -= 1; }                
-                Serial.println("아직 오브젝트가 남아있습니다..");
-                Serial.print("현재 로봇좌표 : X : ");
-                Serial.println(robot_x);
-                Serial.print("현재 로봇좌표 : Y : ");
-                Serial.println(robot_y);                
-
-            } else if (robot_x == 0) {              
-                robot_y += 1;               
-                Serial.println("아직 오브젝트가 남아있습니다..");
-                Serial.print("현재 로봇좌표 : X : ");
-                Serial.println(robot_x);
-                Serial.print("현재 로봇좌표 : Y : ");
-                Serial.println(robot_y);
-                checkHuskyLens();
-                robot_x = 1; 
-              }
-              turnLeft();
-              delay(7600);
-          }
-          
-      }
+   int checkArray = 0;if(popObjectFlag == 1){
+  int checkArray = 0;
+  while(1){
+    if(checkArray == 3) break;    
+    Color nowColor = objectArray[checkArray];
+    
+  }
 }      
+     // nowColor와 동일한 색을 가진 Pillar를 찾기
+            for (int i = 0; i < 4; i++) {
+                if (pillars[i].color == nowColor) {
+                    std::cout << "Pillar found for color: " << nowColor << std::endl;
+                    std::cout << "Pillar x: " << pillars[i].pillar_x << std::endl;
+                    std::cout << "Pillar y: " << pillars[i].pillar_y << std::endl;
+                    break;
+                }
+            }
 
+            checkArray++; // nowColor와 동일한 색을 가진 Pillar를 찾기
+            for (int i = 0; i < 4; i++) {
+                if (pillars[i].color == nowColor) {
+                    std::cout << "Pillar found for color: " << nowColor << std::endl;
+                    std::cout << "Pillar x: " << pillars[i].pillar_x << std::endl;
+                    std::cout << "Pillar y: " << pillars[i].pillar_y << std::endl;
+                    break;
+                }
+            }
 
-
+            checkArray++;         
+      
+         
