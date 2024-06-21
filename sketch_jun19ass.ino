@@ -21,7 +21,7 @@ int robot_x = 0;
 int robot_y = 0;
 int middleValue = 512;
 int yFlag = 0;
-
+int xFlag = 0;
 struct Pillar {
     Color color;
     int pillar_x;
@@ -174,6 +174,7 @@ void checkHuskyLens(){
               delay(1000);
               goingLeft(); 
               }
+            if(xFlag == 1) { xFlag = 0; }  
             delay(1000);
 }
 
@@ -219,12 +220,12 @@ void loop() {
         int B_R = !digitalRead(BR);
         // int B_L = !digitalRead(BL);
      
-        Serial.print("직진 오른쪽 센서 : ");
-        Serial.println(F_R);
-        Serial.print("직진 왼쪽 센서 : ");
-        Serial.println(F_L);
-        Serial.print("옆길 오른쪽 센서 : ");
-        Serial.println(B_R);
+        // Serial.print("직진 오른쪽 센서 : ");
+        // Serial.println(F_R);
+        // Serial.print("직진 왼쪽 센서 : ");
+        // Serial.println(F_L);
+        // Serial.print("옆길 오른쪽 센서 : ");
+        // Serial.println(B_R);
         // Serial.print("옆길 왼쪽 센서 : ");
         // Serial.println(B_L);
         // Serial.println("------------------");
@@ -232,11 +233,11 @@ void loop() {
         
         if(F_R >= 300 && F_L >= 300){
           goingLeft();
-        }else if(F_R <= 300 && F_L >= 600){     
+        }else if(F_R <= 400 && F_L >= 600){     
           Serial.println("헐 이거 작동함");
             exc.setMotorSpeeds(1, 20, -20);
             exc.setMotorSpeeds(2, -20, 20);
-          }else if(F_R >= 600 && F_L <= 300){
+          }else if(F_R >= 600 && F_L <= 400){
             Serial.println("헐 이게 왜 작동함??");
             exc.setMotorSpeeds(1, -20, 20);
             exc.setMotorSpeeds(2, 20, -20);
@@ -249,8 +250,9 @@ void loop() {
             motorStop();
             delay(1000);            
             Serial.println("Line detected, stopping motors.");
-            if (robot_x == 0) {      
-                robot_y += 1;
+            if (robot_x == 0) {  
+                if(xFlag != 1) { robot_y += 1; }
+                
                 Serial.print("현재 로봇좌표 : X : ");
                 Serial.println(robot_x);
                 Serial.print("현재 로봇좌표 : Y : ");
@@ -260,4 +262,60 @@ void loop() {
                 if(yFlag == 1) {                   
                   robot_y -= 1; 
                 }
-                Serial.print("현재 로봇�
+                Serial.print("현재 로봇좌표 : X : ");
+                Serial.println(robot_x);
+                Serial.print("현재 로봇좌표 : Y : ");
+                Serial.println(robot_y);  
+                checkHuskyLens();              
+                                
+            } 
+            
+            //렌즈를 통한 색상 인식
+                                   
+        }
+  
+
+    // 끝라인 도착시 회전
+    if ((B_R == 1 && robot_y == 4 && F_R <= 250 && F_L <= 250) 
+    || (B_R == 1 && robot_y == 2 && F_R <=250 && F_L <= 250)) {
+        motorStop();
+        delay(1000);
+        
+        Serial.println("여기 왔어");
+        if (isArrayEmpty() && robot_x == 1) {    
+            goingLeft();
+            delay(2000);
+            forward();
+            delay(2000);                
+        } else {            
+            if (robot_x == 1) {
+                if( robot_y ==2 ) { 
+                  robot_x = 0; 
+                  xFlag = 1;
+                  }
+                if( robot_y != 5 ) { robot_y -= 1; }                
+                Serial.println("아직 오브젝트가 남아있습니다..");
+                Serial.print("현재 로봇좌표 : X : ");
+                Serial.println(robot_x);
+                Serial.print("현재 로봇좌표 : Y : ");
+                Serial.println(robot_y);                
+
+            } else if (robot_x == 0) {              
+                robot_y += 1;               
+                Serial.println("아직 오브젝트가 남아있습니다..");
+                Serial.print("현재 로봇좌표 : X : ");
+                Serial.println(robot_x);
+                Serial.print("현재 로봇좌표 : Y : ");
+                Serial.println(robot_y);
+                checkHuskyLens();
+                robot_x = 1; 
+              }
+              turnLeft();
+              delay(7600);
+          }
+          
+      }
+}      
+
+
+
