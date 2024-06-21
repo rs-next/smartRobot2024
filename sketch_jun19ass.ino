@@ -1,3 +1,5 @@
+
+//집기 백업
 #include <Wire.h>
 #include <HUSKYLENS.h>
 #include <PRIZM.h> // 테트릭스 프리즘 보드 초기화
@@ -10,6 +12,7 @@
 
 enum Color { RED, GREEN, BLUE, YELLOW, NONE };
 
+int locationArray[2];
 Color objectArray[ARRAY_SIZE];
 PRIZM prizm; // 메인 프리즘 보드
 EXPANSION exc; // 익스펜션 컨트롤러 
@@ -27,6 +30,8 @@ int popObjectFlag = 0;
 int checkArray = 0;
 int gotObject = 0;
 int initGet = 0;
+int target_x = -1;
+int target_y = -1;
 
 struct Pillar {
     Color color;
@@ -65,51 +70,11 @@ double checkDistance(){
   Serial.println(distance);
   return distance;
 }
-bool checkSameObject(){        
-    Color nowColor = objectArray[checkArray];
-    int target_x = -1;
-    int target_y = -1;
- // nowColor와 동일한 색을 가진 Pillar를 찾기
-     for (int i = 0; i < 3; i++) {
-         if (pillars[i].color == nowColor) {
-            target_x = pillars[i].pillar_x;
-            target_y = pillars[i].pillar_y;
-            Serial.print("target_x : ");
-            Serial.println(target_x);
-            Serial.print("target_y : ");
-            Serial.println(target_y);
-            Serial.print("now robot_x : ");
-            Serial.println(robot_x);
-            Serial.print("now robot_y : ");
-            Serial.println(robot_y);
-         }
 
-     }
 
-     if(target_x == robot_x && target_y == robot_y){
-      return true;
-     }else{
-      return false;
-     }
-         
-}
-void popObject(){
-  // getObject -= 1;
-}
+
 void getObject(){
-    //if(objectColorCount != 0){
-    // prizm.setMotorSpeed(1, -300); // 레일 올리기
-    // delay(1500);
-    // forward();
-    // prizm.setServoPosition(1,0); // 집게 풀기
-    //delay(800);
-    // prizm.setMotorSpeed(1, 300); // 레일 내리기
-    // delay(1500);
-    // prizm.setServoPosition(1,180); // 집게 조이기    
 
-  //}
-
-  //체크 거리해서 몇 센티까지 오는지 ?
   exc.setMotorSpeeds(1, 90, 90); // 살짝 이동
   exc.setMotorSpeeds(2, 90, 90); // 살짝 이동
   delay(50);
@@ -205,7 +170,8 @@ bool isArrayFull() {
     return objectColorCount == ARRAY_SIZE;
 }
 void checkHuskyLens(){
-       if (huskylens.request()) {     
+  Serial.println("허스키 함수에 들어오긴했어.");      
+       if(huskylens.request()){
                 Serial.println("HuskyLens request successful.");
                 delay(2000);
                 if (huskylens.count() > 1) {    
@@ -267,4 +233,35 @@ void checkHuskyLens(){
                    if (!isColorInArray(ObjectColor)) {
                       if (objectColorCount < ARRAY_SIZE) {  
                           delay(500);
-                          getObjectif()popObjectFlag == 0{}{}}
+                          getObject();
+                          objectArray[objectColorCount++] = ObjectColor;
+                          Serial.print("objectColorCount : ");
+                          Serial.println(objectColorCount);
+                          
+                      } else {
+                          Serial.println("Color array limit exceeded.");
+                          Serial.println("컬러 배열 한도초과");
+                      }
+                      
+                  } else {
+                      Serial.println("ObjectColor already in array.");
+                      Serial.println("ObjectColor가 배열에 이미 존재합니다.");
+                  }
+               }
+       }
+            
+            
+            if(robot_x == 1 && robot_y == 5){ 
+              yFlag = 1;                             
+              delay(1000);
+              goingLeft();
+              delay(1000);
+            } else if(robot_y != 5) { 
+              delay(1000);
+              goingLeft(); 
+              }
+            if(xFlag == 1) { xFlag = 0; }  
+            delay(1000);
+}
+void checkPillarsLocation(){
+  Color 
