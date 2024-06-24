@@ -588,4 +588,67 @@ else if(popObjectFlag == 1 && checkArray != -1){
                   goingLeft();
                   delay(500);
                 }
-              }else if(robot_x == locationArray[0] && robot_y < loㄴ
+              }else if(robot_x == locationArray[0] && robot_y < locationArray[1]){
+                  if(robot_x == 0){
+                    goingLeft();
+                    delay(500);
+                  }else if(robot_x == 1){
+                    robot_x = 0;
+                    turnLeft();
+                    delay(7900);
+                    
+                    
+                  }
+              }
+              if(checkSameLocation()){
+                popObject();
+                Serial.println("pop 시전");
+                checkArray -= 1;
+                delay(1000);
+                
+              }
+            //////////////////////
+            
+      }   
+      
+  } 
+if(objectColorCount == 3 && robot_y == 2 && robot_x == 1){
+                popObjectFlag = 1;
+}
+if(checkArray == -1){
+        Serial.println("라인 복귀하자");
+        if(robot_x == 0 && checkFinish != 1){
+          turnLeft();
+          delay(7900);
+              
+               
+          checkFinish += 1; 
+            
+        }else if(robot_y != 0){          
+          if(B_R == 1 && F_R <=250 && F_L <= 250){
+            delay(200);
+            robot_y -= 1;
+          }
+
+        }else if(robot_y == 0 && B_R == 1 && F_R <=250 && F_L <= 250 ){
+          motorStop();
+          exc.setMotorSpeeds(1, 300, 300);
+          exc.setMotorSpeeds(2, 300, 300);
+          delay(1500);
+          exc.setMotorSpeeds(1, -150, 150);
+          exc.setMotorSpeeds(2, 150, -150);
+          delay(1000);
+          motorStop();
+
+        }
+
+      } 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+}     
+
+
+
+
+
+
+
